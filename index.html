@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nashville New Build Analyzer · Jason Kaczmarski · RE/MAX 1st Choice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#C0392B;--red-dark:#96281B;--red-light:#fdf2f0;
+  --green:#1a6b3c;--green-light:#e8f5ee;
+  --amber:#B8860B;--amber-light:#fdf8e7;
+  --navy:#1e3a6b;--navy-light:#eef4ff;
+  --bg:#f0efec;--card:#fff;--border:#e2e0db;
+  --text:#1a1a1a;--muted:#6b6860;--surface:#f7f6f3;
+  --dark:#1c1c1c;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+.hdr{background:var(--red);}
+.hdr-in{max-width:1040px;margin:0 auto;padding:13px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.hdr-left{display:flex;align-items:center;gap:11px;}
+.hdr-logo{height:34px;display:block;}
+.hdr-title{font-family:'DM Serif Display',serif;font-size:17px;color:#fff;font-weight:400;line-height:1.2;}
+.hdr-sub{font-size:10px;color:rgba(255,255,255,.65);letter-spacing:.07em;text-transform:uppercase;margin-top:1px;}
+.hdr-cta{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.32);color:#fff;padding:7px 15px;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:background .15s;}
+.hdr-cta:hover{background:rgba(255,255,255,.28);}
+
+.hero{background:var(--dark);border-bottom:3px solid var(--red);padding:32px 20px 28px;}
+.hero-in{max-width:1040px;margin:0 auto;}
+.hero h1{font-family:'DM Serif Display',serif;font-size:30px;color:#fff;font-weight:400;line-height:1.2;max-width:600px;}
+.hero h1 em{color:#e8c97e;font-style:italic;}
+.hero p{font-size:13px;color:rgba(255,255,255,.48);margin-top:7px;line-height:1.7;max-width:520px;}
+
+.main{max-width:1040px;margin:0 auto;padding:20px 20px 60px;}
+.layout{display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:start;}
+.left-col{display:flex;flex-direction:column;gap:12px;}
+.right-col{position:sticky;top:20px;display:flex;flex-direction:column;gap:12px;}
+
+.sc{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.sc-head{padding:13px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.sc-title{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:7px;}
+.sc-body{padding:16px;}
+
+/* ZIP GROUPED SELECTOR */
+.zip-area-group{margin-bottom:12px;}
+.zip-area-group:last-child{margin-bottom:0;}
+.zip-area-label{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block;}
+.zip-pills{display:flex;gap:6px;flex-wrap:wrap;}
+.zip-pill{padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);font-size:12px;font-weight:600;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);transition:all .15s;letter-spacing:.02em;}
+.zip-pill.active{background:var(--red);color:#fff;border-color:var(--red);}
+.zip-pill:hover:not(.active){border-color:#999;color:var(--text);}
+.zip-pill-coming{opacity:.45;cursor:not-allowed;font-style:italic;font-size:11px;letter-spacing:.01em;}
+.zip-meta{font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+
+/* MKT CONTEXT */
+.mkt-ctx-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.mkt-ctx-cell{background:var(--surface);border-radius:7px;padding:10px 12px;text-align:center;}
+.mkt-ctx-val{font-size:17px;font-weight:600;color:var(--red);}
+.mkt-ctx-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
+.mkt-trend-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:10px 12px;background:var(--surface);border-radius:7px;font-size:12px;color:var(--muted);margin-bottom:10px;}
+.mkt-trend-row strong{color:var(--text);}
+.mkt-trend-badge{border-radius:12px;padding:3px 9px;font-size:11px;font-weight:600;border:1px solid;}
+.mkt-trend-badge.up{background:var(--green-light);color:var(--green);border-color:#b8ddc9;}
+.mkt-trend-badge.mod{background:var(--amber-light);color:var(--amber);border-color:#e8c97e;}
+.psqft-compare{background:var(--surface);border-radius:7px;padding:10px 12px;}
+.psqft-compare-lbl{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px;}
+.psqft-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.psqft-bar-row:last-child{margin-bottom:0;}
+.psqft-zip{font-size:11px;color:var(--muted);width:90px;flex-shrink:0;}
+.psqft-track{flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden;}
+.psqft-fill{height:100%;border-radius:4px;}
+.psqft-val{font-size:11px;font-weight:600;width:52px;text-align:right;flex-shrink:0;}
+.defaults-notice{display:none;align-items:center;gap:6px;font-size:11px;color:var(--green);background:var(--green-light);border:1px solid #b8ddc9;border-radius:6px;padding:7px 11px;margin-top:10px;}
+
+/* FIELDS */
+.field{margin-bottom:12px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:500;}
+.finput{width:100%;border:1px solid var(--border);border-radius:6px;padding:9px 12px;font-size:14px;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);transition:border-color .15s,background .3s;}
+.finput:focus{outline:none;border-color:#999;}
+.finput.flash{background:#fff8e6;}
+.input-prefix{position:relative;display:block;}
+.input-prefix span{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none;}
+.input-prefix input{padding-left:22px;}
+.input-suffix-wrap{display:flex;gap:8px;align-items:center;}
+.hint{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45;}
+
+/* SLIDERS */
+.sl{margin-bottom:14px;}
+.sl:last-child{margin-bottom:0;}
+.sl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
+.sl-name{font-size:13px;color:var(--text);}
+.sl-badge{background:var(--dark);color:#fff;padding:3px 9px;border-radius:4px;font-size:12px;font-weight:600;}
+input[type=range]{width:100%;accent-color:var(--red);cursor:pointer;}
+.sl-range{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* ZONING */
+.zone-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.z-btn{padding:9px 12px;border-radius:7px;border:1.5px solid var(--border);font-size:12px;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);font-weight:500;transition:all .15s;text-align:left;display:flex;align-items:center;gap:7px;}
+.z-btn:hover{border-color:#999;color:var(--text);}
+.z-btn.active{background:var(--red);color:#fff;border-color:var(--red);}
+.z-btn.sp-btn.active{background:var(--navy);border-color:var(--navy);}
+.z-radio{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.z-btn.active .z-radio::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff;}
+.z-label{line-height:1.25;}
+.z-code{font-weight:600;display:block;font-size:12px;}
+.z-desc{font-size:10px;opacity:.8;}
+
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;gap:10px;}
+.toggle-label-txt{font-size:13px;color:var(--muted);}
+.toggle{position:relative;width:40px;height:22px;cursor:pointer;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-track{position:absolute;inset:0;background:var(--border);border-radius:11px;transition:background .2s;}
+.toggle input:checked+.toggle-track{background:var(--red);}
+.toggle-thumb{position:absolute;left:3px;top:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.toggle input:checked~.toggle-thumb{transform:translateX(18px);}
+
+/* BUBBLES */
+.bubble{border-radius:6px;padding:8px 12px;font-size:12px;margin-top:8px;line-height:1.55;}
+.bubble.amber{background:#fff8e6;border:1px solid #e8c97e;color:#6b4e00;}
+.bubble.danger{background:var(--red-light);border:1px solid #f5c6c0;color:var(--red-dark);}
+.bubble.navy{background:var(--navy-light);border:1px solid #c5d3f0;color:var(--navy);}
+
+/* VIABILITY CARD */
+.viability-card{background:var(--dark);border-radius:10px;padding:20px;border:1px solid #333;}
+.vc-title{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:2px;}
+.vc-sub{font-size:11px;color:rgba(255,255,255,.28);margin-bottom:16px;}
+.margin-box{background:rgba(255,255,255,.06);border-radius:8px;padding:16px;text-align:center;margin-bottom:14px;}
+.margin-label{font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;}
+.margin-pct{font-size:42px;font-weight:700;line-height:1;margin-bottom:8px;}
+.margin-pct.strong{color:#4ade80;}
+.margin-pct.moderate{color:#fbbf24;}
+.margin-pct.thin,.margin-pct.negative{color:#f87171;}
+.margin-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.margin-badge.strong{background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3);}
+.margin-badge.moderate{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.25);}
+.margin-badge.thin,.margin-badge.negative{background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.25);}
+
+.psqft-ctx{background:rgba(255,255,255,.05);border-radius:6px;padding:10px 12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+.psqft-ctx-left{font-size:11px;color:rgba(255,255,255,.4);}
+.psqft-ctx-left strong{color:rgba(255,255,255,.75);display:block;font-size:13px;margin-bottom:1px;}
+.psqft-ctx-right{text-align:right;}
+.psqft-ctx-right .vs{font-size:10px;color:rgba(255,255,255,.32);}
+.psqft-ctx-right .delta{font-size:13px;font-weight:600;}
+.delta.above{color:#4ade80;}
+.delta.below{color:#fbbf24;}
+
+.line-items{margin-bottom:14px;}
+.li-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px;}
+.li-row:last-child{border-bottom:none;}
+.li-label{color:rgba(255,255,255,.55);}
+.li-val{font-weight:500;color:#fff;}
+.li-val.neg{color:#f87171;}
+.li-val.pos{color:#4ade80;}
+.li-row.net .li-label{color:rgba(255,255,255,.8);font-weight:600;font-size:14px;}
+.li-row.net .li-val{font-size:18px;font-weight:700;}
+
+.key-metrics{background:rgba(255,255,255,.05);border-radius:7px;padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.km-label{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;}
+.km-val{font-size:15px;font-weight:600;color:#fff;}
+
+.lot-rule{margin-bottom:6px;}
+.lr-top{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.4);margin-bottom:4px;}
+.lr-bar{height:7px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden;}
+.lr-fill{height:100%;border-radius:4px;transition:width .35s;}
+.lr-note{font-size:11px;color:rgba(255,255,255,.35);margin-top:4px;line-height:1.5;}
+
+.pdf-btn{width:100%;padding:13px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;margin-top:14px;}
+.pdf-btn:hover{background:var(--red-dark);}
+.pdf-btn:disabled{opacity:.6;cursor:not-allowed;}
+.notify-status{font-size:11px;text-align:center;margin-top:5px;min-height:16px;}
+.pdf-disclaimer{font-size:10px;color:rgba(255,255,255,.22);margin-top:6px;text-align:center;line-height:1.5;}
+
+/* MARKET TRENDS */
+.mkt-toggle{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;background:var(--surface);border-bottom:1px solid var(--border);}
+.mkt-toggle-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.mkt-arrow{font-size:12px;color:var(--muted);transition:transform .22s;}
+.mkt-arrow.open{transform:rotate(180deg);}
+.mkt-body{display:none;padding:16px;}
+.mkt-body.open{display:block;}
+.insight{background:var(--surface);border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:10px 13px;font-size:12px;color:var(--muted);line-height:1.65;margin-bottom:14px;}
+.insight strong{color:var(--text);}
+.yr-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.yr-btn{padding:4px 12px;border-radius:20px;border:1px solid var(--border);font-size:11px;font-weight:500;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);transition:all .15s;}
+.yr-btn.active{background:var(--red);color:#fff;border-color:var(--red);}
+.mkt-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.ms{background:var(--surface);border-radius:7px;padding:9px 11px;}
+.ms-val{font-size:15px;font-weight:600;color:var(--red);}
+.ms-lbl{font-size:10px;color:var(--muted);margin-top:1px;}
+.chart-wrap{position:relative;width:100%;height:240px;margin-bottom:14px;}
+.leg-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:7px;font-size:11px;color:var(--muted);}
+.leg-dot{width:9px;height:9px;border-radius:2px;display:inline-block;flex-shrink:0;}
+.comp-note{background:var(--surface);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--muted);line-height:1.6;margin-top:10px;}
+.comp-note strong{color:var(--text);}
+
+/* FOOTER */
+.footer{background:var(--dark);border-top:3px solid var(--red);padding:32px 20px;}
+.footer-in{max-width:1040px;margin:0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;}
+.footer-logo{height:32px;margin-bottom:8px;display:block;}
+.footer-copy{font-size:11px;color:rgba(255,255,255,.32);line-height:1.7;max-width:260px;}
+.footer-right h3{font-family:'DM Serif Display',serif;font-size:17px;color:#fff;font-weight:400;margin-bottom:5px;}
+.footer-right p{font-size:12px;color:rgba(255,255,255,.42);margin-bottom:11px;}
+.footer-cta{display:inline-block;background:var(--red);color:#fff;padding:10px 18px;border-radius:7px;text-decoration:none;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;transition:background .15s;}
+.footer-cta:hover{background:var(--red-dark);}
+.footer-bottom{max-width:1040px;margin:20px auto 0;padding-top:16px;border-top:1px solid rgba(255,255,255,.06);font-size:10px;color:rgba(255,255,255,.22);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+
+@media(max-width:720px){
+  .layout{grid-template-columns:1fr;}
+  .right-col{position:static;}
+  .hero h1{font-size:24px;}
+  .zone-grid{grid-template-columns:1fr;}
+  .mkt-stats,.mkt-ctx-grid{grid-template-columns:1fr 1fr;}
+  .key-metrics{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="hdr-left">
+      <img class="hdr-logo" src="https://kvcore-library.s3.amazonaws.com/remax1stchoice8207/images/03b9616f75a8e185d56a93c799829fdf.png" alt="RE/MAX 1st Choice" onerror="this.style.display='none'">
+      <div>
+        <div class="hdr-title">Nashville New Build Analyzer</div>
+        <div class="hdr-sub">Jason Kaczmarski · RE/MAX 1st Choice · (615) 587-7888</div>
+      </div>
+    </div>
+    <a class="hdr-cta" href="https://the-jason-kaczmarski-team-springfield-tn.remax.com/ask/9539cc58d5c28bd9c77d6755120798e0" target="_blank" rel="noopener">Talk to Jason →</a>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-in">
+    <h1>New Build <em>Pro Forma</em> Calculator</h1>
+    <p>Select a market, enter your lot cost and build parameters — get your margin, break-even, and deal summary instantly. Backed by 2020–2025 closed sales data.</p>
+  </div>
+</div>
+
+<div class="main">
+  <div class="layout">
+    <div class="left-col">
+
+      <!-- 1. MARKET -->
+      <div class="sc">
+        <div class="sc-head"><div class="sc-title"><span>📍</span> Market</div></div>
+        <div class="sc-body">
+          <div id="zip-groups"></div>
+          <div class="zip-meta" id="zip-meta"></div>
+          <div style="margin-top:14px;">
+            <div class="mkt-ctx-grid" id="mkt-ctx-grid"></div>
+            <div class="mkt-trend-row" id="mkt-trend-row"></div>
+            <div class="psqft-compare" id="psqft-compare"></div>
+          </div>
+          <div class="defaults-notice" id="defaults-notice">
+            <span>✓</span><span id="defaults-notice-txt"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. PROPERTY ACQUISITION -->
+      <div class="sc">
+        <div class="sc-head"><div class="sc-title"><span>🏗</span> Property acquisition</div></div>
+        <div class="sc-body">
+          <div class="field">
+            <label>Land / teardown cost</label>
+            <div class="input-prefix"><span>$</span><input class="finput" type="text" id="lot" value="400,000" oninput="fmtM(this);calc()"></div>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Zoning &amp; density</label>
+            <div class="zone-grid">
+              <button class="z-btn active" onclick="setZone('rs',this)"><div class="z-radio"></div><div class="z-label"><span class="z-code">Rs Zoning</span><span class="z-desc">1 unit</span></div></button>
+              <button class="z-btn" onclick="setZone('r',this)"><div class="z-radio"></div><div class="z-label"><span class="z-code">R Zoning</span><span class="z-desc">2 units</span></div></button>
+              <button class="z-btn" onclick="setZone('mul',this)"><div class="z-radio"></div><div class="z-label"><span class="z-code">Mul Zoning</span><span class="z-desc">Multi-unit</span></div></button>
+              <button class="z-btn sp-btn" onclick="setZone('sp',this)"><div class="z-radio"></div><div class="z-label"><span class="z-code">SP Zoning</span><span class="z-desc">Special purpose</span></div></button>
+            </div>
+            <div id="sp-notice" style="display:none" class="bubble navy">SP Zoning is subject to city/county approval. Approval is not guaranteed and timelines vary. Do not underwrite a deal dependent on SP approval without consulting a land use attorney.</div>
+            <div id="units-wrap" style="display:none;margin-top:10px;">
+              <div class="field" style="margin-bottom:8px;">
+                <label id="units-lbl">Number of units planned</label>
+                <input class="finput" type="number" id="units" value="2" min="2" max="50" oninput="calc()" style="width:80px;">
+              </div>
+              <div class="toggle-row">
+                <label class="toggle"><input type="checkbox" id="similar-toggle" checked onchange="calc()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                <span class="toggle-label-txt">Build similar / identical homes</span>
+              </div>
+              <div class="bubble amber" style="margin-top:8px;">Cost and revenue split equally across all units. Model differently sized units separately.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. CONSTRUCTION & RESALE -->
+      <div class="sc">
+        <div class="sc-head"><div class="sc-title"><span>📐</span> Construction &amp; resale</div><div style="font-size:11px;color:var(--muted)">per unit</div></div>
+        <div class="sc-body">
+          <div class="sl">
+            <div class="sl-top"><span class="sl-name">Planned size (sq ft)</span><span class="sl-badge" id="sqft-badge">1,800 sf</span></div>
+            <input type="range" id="sqft" min="1000" max="3500" step="50" value="1800" oninput="syncResaleOnSqftChange();calc()">
+            <div class="sl-range"><span>1,000 sf</span><span>3,500 sf</span></div>
+            <div id="sqft-bubble" style="display:none" class="bubble amber">Above 3,000 sqft approaches custom build territory — costs vary widely. Contact Jason or a licensed builder for specifics.</div>
+          </div>
+          <div class="sl">
+            <div class="sl-top"><span class="sl-name">Build cost ($/sf)</span><span class="sl-badge" id="bpsf-badge">$175/sf</span></div>
+            <input type="range" id="bpsf" min="150" max="300" step="5" value="175" oninput="calc()">
+            <div class="sl-range"><span>$150/sf</span><span style="color:var(--muted)">Def: $175</span><span>$300/sf</span></div>
+            <div id="bpsf-bubble" style="display:none" class="bubble danger">Above $250/sf approaches custom build territory. Contact Jason or a licensed builder/contractor for more specific details.</div>
+          </div>
+          <div class="field">
+            <label>Projected resale price per unit</label>
+            <div class="input-suffix-wrap">
+              <div class="input-prefix" style="flex:1"><span>$</span><input class="finput" type="text" id="resale" value="647,000" oninput="resaleChanged('total');calc()"></div>
+              <div style="color:var(--muted);font-size:11px;font-weight:500;">@</div>
+              <div style="display:flex;align-items:center;gap:4px;width:110px;">
+                <span style="font-size:12px;color:var(--muted)">$</span>
+                <input class="finput" type="text" id="resale-psf" value="360" oninput="resaleChanged('psf');calc()" style="width:65px;padding:9px 8px;">
+                <span style="font-size:11px;color:var(--muted);white-space:nowrap">/sf</span>
+              </div>
+            </div>
+            <div class="hint">Total price and $/sqft stay in sync as you type either one.</div>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Additional soft costs per unit <span style="font-weight:400;color:var(--muted)">(holding, permits, insurance, contingency)</span></label>
+            <div class="input-prefix"><span>$</span><input class="finput" type="text" id="softcosts" value="15,000" oninput="fmtM(this);calc()"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. SELLING COSTS -->
+      <div class="sc">
+        <div class="sc-head"><div class="sc-title"><span>📊</span> Selling costs</div></div>
+        <div class="sc-body">
+          <div class="sl" style="margin-bottom:0">
+            <div class="sl-top"><span class="sl-name">Selling cost % of sale price</span><span class="sl-badge" id="sell-badge">7.5%</span></div>
+            <input type="range" id="sell" min="2" max="10" step="0.5" value="7.5" oninput="calc()">
+            <div class="sl-range"><span>2%</span><span>10%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. MARKET TRENDS -->
+      <div class="sc">
+        <div class="mkt-toggle" onclick="toggleMarket()" role="button" tabindex="0" id="mkt-btn" aria-expanded="false">
+          <span class="mkt-toggle-lbl">📈 Market trends 2020–2025 · <span id="mkt-zip-lbl">37206</span></span>
+          <span class="mkt-arrow" id="mkt-arrow">▼</span>
+        </div>
+        <div class="mkt-body" id="mkt-body">
+          <div class="insight" id="mkt-insight"></div>
+          <div class="yr-row" id="yr-row"></div>
+          <div class="mkt-stats" id="mkt-stats"></div>
+          <div class="leg-row" id="chart-legend"></div>
+          <div class="chart-wrap"><canvas id="priceChart" role="img" aria-label="Median sale price by zip code 2020 to 2025">Nashville new construction median prices 2020 to 2025.</canvas></div>
+          <div class="leg-row" id="chart-legend-psqft"></div>
+          <div class="chart-wrap"><canvas id="psqftChart" role="img" aria-label="Median price per sqft by zip code 2020 to 2025">Nashville new construction median price per sqft 2020 to 2025.</canvas></div>
+          <div class="comp-note" id="comp-note"></div>
+          <p style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.6;">Realtracs MLS · Detached SINGL &amp; HPR-D · Year built within 1–2 years of close · Closed 2020–2025. Information believed accurate but not guaranteed. © 2026 Realtracs, Inc.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-col">
+      <div class="viability-card">
+        <div class="vc-title">Project Viability</div>
+        <div class="vc-sub">Estimated financial performance</div>
+        <div class="margin-box">
+          <div class="margin-label">Estimated profit margin</div>
+          <div class="margin-pct" id="margin-pct">—</div>
+          <div class="margin-badge" id="margin-badge">—</div>
+        </div>
+        <div class="psqft-ctx" id="psqft-ctx"></div>
+        <div class="line-items" id="line-items"></div>
+        <div class="key-metrics" id="key-metrics"></div>
+        <div class="lot-rule">
+          <div class="lr-top"><span>Lot cost as % of exit</span><span id="lr-pct">—</span></div>
+          <div class="lr-bar"><div class="lr-fill" id="lr-fill"></div></div>
+          <div class="lr-note" id="lr-note"></div>
+        </div>
+        <button class="pdf-btn" id="pdf-btn" onclick="downloadPDF()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PDF Deal Summary
+        </button>
+        <div class="notify-status" id="notify-status"></div>
+        <div class="pdf-disclaimer">This tool does not promise zoning approval, construction pricing, financing, permits, or final resale value.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-in">
+    <div>
+      <img class="footer-logo" src="https://kvcore-library.s3.amazonaws.com/remax1stchoice8207/images/03b9616f75a8e185d56a93c799829fdf.png" alt="RE/MAX 1st Choice" onerror="this.style.display='none'">
+      <p class="footer-copy">Nashville new construction data sourced from Realtracs MLS. All projections are estimates and not guaranteed. Not financial, tax, or investment advice. © 2026 Realtracs, Inc.</p>
+    </div>
+    <div class="footer-right">
+      <h3>Ready to run the numbers on a real lot?</h3>
+      <p>Free consultation · No obligation · Same-day response</p>
+      <a class="footer-cta" href="https://the-jason-kaczmarski-team-springfield-tn.remax.com/ask/9539cc58d5c28bd9c77d6755120798e0" target="_blank" rel="noopener">Talk to Jason → Free consultation</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>Jason Kaczmarski · RE/MAX 1st Choice · jasonk@realtracs.com · (615) 587-7888</span>
+    <span>Report Date: 4/17/26</span>
+  </div>
+</footer>
+
+<script>
+emailjs.init('hMLwRDdoesAV7z3sK');
+
+// ══════ ZIP / AREA DATA ══════
+// To add a new zip: add entry to ZIPS, add zip to correct area in AREAS (or create new area)
+var AREAS=[
+  {label:'East Nashville',zips:['37206','37207']},
+  {label:'North Nashville',zips:['37208']},
+  {label:'South Nashville',zips:['37211']},
+  {label:'West Nashville',zips:['nations'],comingSoon:['sylvan-park','charlotte-park']}
+];
+
+// Chart colors assigned per zip (add more as needed)
+var ZIP_COLORS={
+  '37206':'#C0392B',
+  '37207':'#1a6b3c',
+  '37208':'#1e3a6b',
+  '37211':'#B8860B',
+  'nations':'#6B3FA0'
+};
+
+var YEARS=['2020','2021','2022','2023','2024','2025'];
+
+var ZIPS={
+  '37206':{
+    area:'East Nashville',
+    medPrice:[564170,655250,850000,910000,810000,1112500],
+    avgPrice:[560130,699015,929319,1024682,921157,1117700],
+    medPsqft:[232,273,326,329,330,362],
+    sales:[85,100,100,100,91,62],medDOM:[12,8,2,17,22,17],
+    priceRange:['$353K–$1.18M','$369K–$1.77M','$450K–$2.25M','$350K–$3.0M','$560K–$2.25M','$499K–$2.2M'],
+    medPsqftLatest:362,medPriceLatest:1112500,defaultSqft:2000,pctGrowth5yr:97,
+    insight:'<strong>37206 · East Nashville · 2020–2025.</strong> Median prices climbed from $564K to $1.11M — a 97% increase over five years. Median $/sqft rose from $232 to $362. Volume was consistently strong at 85–100 closings annually through 2024. Lockeland Springs, Shelby Hills, and Rosebank/Fortland Park drive the upper tier.',
+    note2022:''
+  },
+  '37207':{
+    area:'East Nashville',
+    medPrice:[447000,502500,695000,523750,598950,646900],
+    avgPrice:[452297,559022,759081,607475,673312,751876],
+    medPsqft:[229,256,332,286,309,323],
+    sales:[65,51,27,51,82,60],medDOM:[9,0,1,0,15,13],
+    priceRange:['$339K–$670K','$350K–$1.16M','$446K–$1.05M','$330K–$1.5M','$349K–$1.51M','$380K–$1.45M'],
+    medPsqftLatest:323,medPriceLatest:646900,defaultSqft:1800,pctGrowth5yr:45,
+    insight:'<strong>37207 · East Nashville · 2020–2025.</strong> Median prices grew from $447K to $647K — a 45% increase. Median $/sqft climbed from $229 to $323. The 2022 spike reflects a small high-end sample (27 sales) weighted toward Cleveland Park — treat that year with caution. Volume recovered strongly in 2024–2025.',
+    note2022:'Low 2022 volume (27 sales) reflects a filter window weighted toward larger Cleveland Park product.'
+  },
+  '37208':{
+    area:'North Nashville',
+    medPrice:[400000,499900,630000,628000,599000,625000],
+    avgPrice:[420214,519989,628105,633588,647719,646215],
+    medPsqft:[218,253,300,273,272,276],
+    sales:[100,83,49,41,52,27],medDOM:[26,18,5,11,26,22],
+    priceRange:['$139K–$935K','$220K–$797K','$250K–$1.07M','$350K–$1.2M','$228K–$1.45M','$315K–$900K'],
+    medPsqftLatest:276,medPriceLatest:625000,defaultSqft:1900,pctGrowth5yr:56,
+    insight:'<strong>37208 · North Nashville · 2020–2025.</strong> Median prices rose from $400K to $625K — a 56% increase over five years. The market peaked in 2022 at $630K, pulled back slightly in 2023–2024, and stabilized around $600–625K. Buchanan Arts District, Buena Vista, and Germantown-adjacent pockets command the higher price points. Volume has trended down since 2021 as available lots become scarcer.',
+    note2022:''
+  },
+  '37211':{
+    area:'South Nashville',
+    medPrice:[499000,544800,570929,642500,710000,899000],
+    avgPrice:[497860,541040,615906,673739,708560,802316],
+    medPsqft:[209,234,271,274,294,284],
+    sales:[79,83,50,55,82,82],medDOM:[3,0,3,9,17,1],
+    priceRange:['$339K–$660K','$350K–$850K','$400K–$1.71M','$380K–$1.19M','$411K–$1.17M','$425K–$1.08M'],
+    medPsqftLatest:284,medPriceLatest:899000,defaultSqft:2400,pctGrowth5yr:80,
+    insight:'<strong>37211 · South Nashville · 2020–2025.</strong> Median prices climbed from $499K to $899K — an 80% increase over five years. The 2025 median is significantly influenced by Sycamore Estates and View at the Woodlands delivering a high volume of larger $850K–$1M+ product. Woodbine, Melrose, and Crieve Hall represent the more accessible price points. Volume has been consistently strong at 79–83 closings annually.',
+    note2022:''
+  },
+  'nations':{
+    area:'West Nashville',
+    label:'The Nations',
+    medPrice:[556000,638600,777000,835000,848250,865000],
+    avgPrice:[547165,655662,786900,882790,839055,894361],
+    medPsqft:[243,278,336,317,352,360],
+    sales:[72,53,16,21,20,18],medDOM:[10,0,6,35,27,17],
+    priceRange:['$361K–$660K','$575K–$800K','$695K–$925K','$699K–$1.61M','$660K–$995K','$480K–$1.33M'],
+    medPsqftLatest:360,medPriceLatest:865000,defaultSqft:2400,pctGrowth5yr:56,
+    insight:'<strong>The Nations · West Nashville · 2020–2025.</strong> One of Nashville's most dramatic neighborhood transformations. Median prices rose from $556K in 2020 to $865K in 2025 — a 56% increase. Declining sales volume (72 in 2020 down to 16–21 in 2022–2023) reflects the near-exhaustion of teardown inventory rather than softening demand — most of the older 80–100 year old housing stock that could be replaced was replaced 2015–2022. Median $/sqft climbed from $243 to $360 over five years.',
+    note2022:'Low 2022 volume (16 sales) reflects scarcity of remaining teardown lots, not market weakness.'
+  }
+};
+
+// ══════ STATE ══════
+var activeZip='37206',activeZone='rs',selYear=5,mktOpen=false,chartsBuilt=false;
+var lastCalc={};
+var _syncing=false;
+var charts={};
+
+// ══════ BUILD ZIP GROUP SELECTOR ══════
+function buildZipGroups(){
+  var wrap=document.getElementById('zip-groups');
+  wrap.innerHTML='';
+  AREAS.forEach(function(area){
+    var grp=document.createElement('div');
+    grp.className='zip-area-group';
+    var lbl=document.createElement('span');
+    lbl.className='zip-area-label';
+    lbl.textContent=area.label;
+    grp.appendChild(lbl);
+    var pills=document.createElement('div');
+    pills.className='zip-pills';
+    area.zips.forEach(function(z){
+      var d=ZIPS[z];
+      var displayLabel=d&&d.label?d.label:z;
+      var b=document.createElement('button');
+      b.className='zip-pill'+(z===activeZip?' active':'');
+      b.textContent=displayLabel;
+      b.setAttribute('data-zip',z);
+      b.onclick=function(){
+        activeZip=z;
+        document.querySelectorAll('.zip-pill').forEach(function(x){x.classList.remove('active');});
+        b.classList.add('active');
+        document.getElementById('mkt-zip-lbl').textContent=displayLabel;
+        applyZipDefaults(z);
+        updateMktContext();
+        updateInsight();
+        updateMktStats();
+        if(chartsBuilt)buildCharts();
+        calc();
+      };
+      pills.appendChild(b);
+    });
+    // Coming soon pills
+    if(area.comingSoon){
+      var csLabels={'sylvan-park':'Sylvan Park','charlotte-park':'Charlotte Park'};
+      area.comingSoon.forEach(function(cs){
+        var b=document.createElement('button');
+        b.className='zip-pill zip-pill-coming';
+        b.textContent=(csLabels[cs]||cs)+' · soon';
+        b.disabled=true;
+        b.title='Data coming soon';
+        pills.appendChild(b);
+      });
+    }
+    grp.appendChild(pills);
+    wrap.appendChild(grp);
+  });
+  updateZipMeta();
+}
+
+function updateZipMeta(){
+  var d=ZIPS[activeZip];
+  var displayId=d.label?d.label+' ('+d.area+')':activeZip+' · '+d.area;
+  document.getElementById('zip-meta').textContent=displayId+' · 2025 median '+fmtK(d.medPrice[5])+' · $'+d.medPsqft[5]+'/sqft';
+}
+
+function applyZipDefaults(z){
+  var d=ZIPS[z];
+  var sqftEl=document.getElementById('sqft');
+  sqftEl.value=d.defaultSqft;
+  var resaleVal=Math.round(d.medPriceLatest/1000)*1000;
+  var psfVal=Math.round(resaleVal/d.defaultSqft);
+  document.getElementById('resale').value=resaleVal.toLocaleString();
+  document.getElementById('resale-psf').value=psfVal.toLocaleString();
+  [document.getElementById('resale'),document.getElementById('resale-psf')].forEach(function(el){
+    el.classList.add('flash');
+    setTimeout(function(){el.classList.remove('flash');},800);
+  });
+  var notice=document.getElementById('defaults-notice');
+  document.getElementById('defaults-notice-txt').textContent='Defaults updated to '+z+' 2025 median — adjust for your specific deal.';
+  notice.style.display='flex';
+  setTimeout(function(){notice.style.display='none';},4000);
+}
+
+function updateMktContext(){
+  var d=ZIPS[activeZip];
+  document.getElementById('mkt-ctx-grid').innerHTML=
+    '<div class="mkt-ctx-cell"><div class="mkt-ctx-val">'+fmtK(d.medPrice[5])+'</div><div class="mkt-ctx-lbl">2025 median sale</div></div>'+
+    '<div class="mkt-ctx-cell"><div class="mkt-ctx-val">$'+d.medPsqft[5]+'/sf</div><div class="mkt-ctx-lbl">2025 median $/sqft</div></div>'+
+    '<div class="mkt-ctx-cell"><div class="mkt-ctx-val">'+d.medDOM[5]+' days</div><div class="mkt-ctx-lbl">2025 median DOM</div></div>';
+  var g=d.pctGrowth5yr;
+  document.getElementById('mkt-trend-row').innerHTML='<strong>5-year median price growth (2020–2025)</strong><span class="mkt-trend-badge '+(g>=60?'up':'mod')+'">+'+g+'%</span>';
+
+  // $/sqft comparison bars — all zips
+  var allZips=Object.keys(ZIPS);
+  var maxPsqft=Math.max.apply(null,allZips.map(function(z){return ZIPS[z].medPsqft[5];}));
+  var rows=allZips.map(function(z){
+    var pct=Math.round(ZIPS[z].medPsqft[5]/maxPsqft*100);
+    var col=ZIP_COLORS[z]||'#888';
+    var isActive=z===activeZip;
+    var zlbl=ZIPS[z].label||z;
+    return'<div class="psqft-bar-row"><span class="psqft-zip" style="width:90px;'+(isActive?'font-weight:700;color:var(--text)':'')+'">'+zlbl+'</span>'+
+      '<div class="psqft-track"><div class="psqft-fill" style="width:'+pct+'%;background:'+col+';height:100%;border-radius:4px;opacity:'+(isActive?'1':'.5')+'"></div></div>'+
+      '<span class="psqft-val" style="color:'+col+';opacity:'+(isActive?'1':'.7')+'">$'+ZIPS[z].medPsqft[5]+'/sf</span></div>';
+  }).join('');
+  document.getElementById('psqft-compare').innerHTML='<div class="psqft-compare-lbl">2025 median $/sqft — all markets</div>'+rows;
+}
+
+// ══════ ZONE ══════
+function setZone(z,el){
+  document.querySelectorAll('.z-btn').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');activeZone=z;
+  document.getElementById('sp-notice').style.display=(z==='sp')?'block':'none';
+  var show=(z==='r'||z==='mul'||z==='sp');
+  document.getElementById('units-wrap').style.display=show?'block':'none';
+  var ul=document.getElementById('units-lbl'),ui=document.getElementById('units');
+  if(z==='r'){ui.value=2;ui.min=2;ul.textContent='Number of units planned';}
+  if(z==='mul'){ui.min=3;if(parseInt(ui.value)<3)ui.value=3;ul.textContent='Number of units planned';}
+  if(z==='sp'){ui.min=2;ul.textContent='Projected units (pending approval)';}
+  calc();
+}
+
+// ══════ UTILS ══════
+function fmtM(el){var r=el.value.replace(/[^0-9]/g,'');if(!r){el.value='';return;}el.value=parseInt(r,10).toLocaleString();}
+function parsM(s){return parseInt((s||'').replace(/[^0-9]/g,''),10)||0;}
+function fmt(n){return'$'+Math.round(n).toLocaleString();}
+function fmtK(n){if(n>=1000000){return'$'+(Math.round(n/10000)/100).toFixed(2).replace(/\.?0+$/,'')+'M';}return'$'+Math.round(n/1000)+'K';}
+function fmtP(n){return(Math.round(n*10)/10)+'%';}
+function marginClass(m){return m>=18?'strong':m>=10?'moderate':m>=0?'thin':'negative';}
+function marginLabel(m){return m>=18?'Strong (≥18%)':m>=10?'Moderate (10–17%)':m>=0?'Thin (0–9%)':'Negative — deal does not pencil';}
+
+function resaleChanged(source){
+  if(_syncing)return;_syncing=true;
+  var sqft=parseInt(document.getElementById('sqft').value)||1800;
+  if(source==='total'){
+    var t=parsM(document.getElementById('resale').value);
+    document.getElementById('resale-psf').value=sqft>0?Math.round(t/sqft).toLocaleString():'0';
+  } else {
+    var p=parsM(document.getElementById('resale-psf').value);
+    document.getElementById('resale').value=(p*sqft).toLocaleString();
+  }
+  _syncing=false;
+}
+function syncResaleOnSqftChange(){
+  if(_syncing)return;_syncing=true;
+  var sqft=parseInt(document.getElementById('sqft').value)||1800;
+  var t=parsM(document.getElementById('resale').value);
+  document.getElementById('resale-psf').value=sqft>0?Math.round(t/sqft).toLocaleString():'0';
+  _syncing=false;
+}
+
+// ══════ CALC ══════
+function calc(){
+  var d=ZIPS[activeZip];
+  var lot=parsM(document.getElementById('lot').value);
+  var sqft=parseInt(document.getElementById('sqft').value)||1800;
+  var bpsf=parseInt(document.getElementById('bpsf').value)||175;
+  var resalePerUnit=parsM(document.getElementById('resale').value);
+  var softPerUnit=parsM(document.getElementById('softcosts').value);
+  var sellPct=parseFloat(document.getElementById('sell').value)/100;
+  var units=(activeZone==='rs')?1:Math.max(1,parseInt(document.getElementById('units').value)||1);
+
+  document.getElementById('sqft-badge').textContent=sqft.toLocaleString()+' sf';
+  document.getElementById('bpsf-badge').textContent='$'+bpsf+'/sf';
+  document.getElementById('sell-badge').textContent=fmtP(parseFloat(document.getElementById('sell').value));
+  document.getElementById('sqft-bubble').style.display=sqft>3000?'block':'none';
+  document.getElementById('bpsf-bubble').style.display=bpsf>250?'block':'none';
+
+  var lotPerUnit=lot/units,buildPerUnit=sqft*bpsf,totalCostPerUnit=lotPerUnit+buildPerUnit+softPerUnit;
+  var sellCostPerUnit=resalePerUnit*sellPct,profitPerUnit=resalePerUnit-totalCostPerUnit-sellCostPerUnit;
+  var totalRevenue=resalePerUnit*units,totalCost=totalCostPerUnit*units;
+  var totalSellCost=sellCostPerUnit*units,totalProfit=profitPerUnit*units;
+  var margin=resalePerUnit>0?(profitPerUnit/resalePerUnit)*100:0;
+  var roi=totalCostPerUnit>0?(profitPerUnit/totalCostPerUnit)*100:0;
+  var breakEven=totalCostPerUnit+sellCostPerUnit;
+  var psqftSale=resalePerUnit>0?Math.round(resalePerUnit/sqft):0;
+  var lotPct=totalRevenue>0?(lot/totalRevenue)*100:0;
+  var med=d.medPsqftLatest;
+
+  lastCalc={lot,sqft,bpsf,resalePerUnit,softPerUnit,sellPct,units,activeZip,activeZone,
+    totalRevenue,totalCost,totalSellCost,totalProfit,profitPerUnit,margin,roi,breakEven,
+    lotPerUnit,buildPerUnit,totalCostPerUnit,psqftSale,lotPct,sellCostPerUnit};
+
+  var mc=marginClass(margin);
+  var mp=document.getElementById('margin-pct');mp.textContent=fmtP(margin);mp.className='margin-pct '+mc;
+  var mb=document.getElementById('margin-badge');mb.textContent=marginLabel(margin);mb.className='margin-badge '+mc;
+
+  var diff=psqftSale-med;
+  var activeDisplayLabel=ZIPS[activeZip].label||activeZip;
+  document.getElementById('psqft-ctx').innerHTML=
+    '<div class="psqft-ctx-left"><strong>$'+psqftSale+'/sf</strong>Your exit $/sqft</div>'+
+    '<div class="psqft-ctx-right"><div class="vs">'+activeDisplayLabel+' 2025 median: $'+med+'/sf</div>'+
+    '<div class="delta '+(diff>=0?'above':'below')+'">'+(diff>=0?'+$'+diff:'-$'+Math.abs(diff))+'/sf</div></div>';
+
+  document.getElementById('line-items').innerHTML=[
+    {l:'Gross revenue'+(units>1?' ('+units+' units)':''),v:fmt(totalRevenue),c:''},
+    {l:'Sales costs',v:'-'+fmt(totalSellCost),c:'neg'},
+    {l:'Total project cost',v:'-'+fmt(totalCost),c:'neg'},
+    {l:'Net profit'+(units>1?' ('+units+' units)':''),v:(totalProfit>=0?'':'-')+fmt(Math.abs(totalProfit)),c:totalProfit>=0?'pos':'neg',net:true}
+  ].map(function(r){return'<div class="li-row'+(r.net?' net':'')+'"><span class="li-label">'+r.l+'</span><span class="li-val '+r.c+'">'+r.v+'</span></div>';}).join('');
+
+  document.getElementById('key-metrics').innerHTML=
+    '<div><div class="km-label">Return on cost</div><div class="km-val">'+fmtP(roi)+'</div></div>'+
+    '<div><div class="km-label">Break-even / unit</div><div class="km-val">'+fmt(breakEven)+'</div></div>'+
+    (units>1?'<div><div class="km-label">Profit per unit</div><div class="km-val">'+fmt(profitPerUnit)+'</div></div>':'<div><div class="km-label">Selling costs</div><div class="km-val">'+fmt(sellCostPerUnit)+'</div></div>')+
+    '<div><div class="km-label">Lot cost / unit</div><div class="km-val">'+fmt(lotPerUnit)+'</div></div>';
+
+  document.getElementById('lr-pct').textContent=fmtP(lotPct);
+  var lf=document.getElementById('lr-fill');
+  lf.style.width=Math.min(lotPct,100)+'%';
+  lf.style.background=lotPct<=20?'#4ade80':lotPct<=30?'#fbbf24':'#f87171';
+  document.getElementById('lr-note').textContent=lotPct<=20?'Within the ≤20% investor rule of thumb.':lotPct<=30?'Slightly above the 20% rule — tighter margin for error.':'Above 30% — most investors would want the lot price lower or the exit price higher.';
+}
+
+// ══════ PDF ══════
+function downloadPDF(){
+  var c=lastCalc;if(!c.sqft){calc();c=lastCalc;}
+  var mc=marginClass(c.margin);
+  var mcColor=mc==='strong'?'#16a34a':mc==='moderate'?'#d97706':'#dc2626';
+  var dateStr=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  var zoneLabel={'rs':'Rs Zoning (1 unit)','r':'R Zoning (2 units)','mul':'Mul Zoning (multi-unit)','sp':'SP Zoning (special purpose)'}[c.activeZone]||c.activeZone;
+  var areaLabel=ZIPS[c.activeZip].label?ZIPS[c.activeZip].label+' · '+ZIPS[c.activeZip].area:ZIPS[c.activeZip].area;
+
+  var btn=document.getElementById('pdf-btn');
+  var status=document.getElementById('notify-status');
+  btn.disabled=true;
+  btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg> Generating…';
+  status.textContent='';status.style.color='';
+
+  emailjs.send('service_9p636hd','template_rw0y25g',{
+    zip:c.activeZip,market_label:areaLabel,zoning:zoneLabel,units:c.units,
+    lot:fmt(c.lot),sqft:c.sqft.toLocaleString()+' sqft',bpsf:'$'+c.bpsf+'/sf',
+    softcosts:fmt(c.softPerUnit),resale:fmt(c.resalePerUnit),sell_pct:fmtP(c.sellPct*100),
+    gross_revenue:fmt(c.totalRevenue),net_profit:fmt(c.totalProfit),
+    margin:fmtP(c.margin),roi:fmtP(c.roi),breakeven:fmt(c.breakEven),date:dateStr
+  }).then(function(){
+    status.textContent='✓ Summary sent to Jason';status.style.color='#4ade80';
+    setTimeout(function(){status.textContent='';},5000);
+  },function(){status.textContent='';
+  }).finally(function(){
+    btn.disabled=false;
+    btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PDF Deal Summary';
+  });
+
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Deal Summary · '+c.activeZip+'</title>'+
+  '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:sans-serif;background:#fff;color:#111;padding:32px;max-width:680px;margin:0 auto;}'+
+  '.hdr{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #C0392B;padding-bottom:14px;margin-bottom:20px;}'+
+  '.hdr-title{font-size:20px;font-weight:700;}.hdr-sub{font-size:11px;color:#888;margin-top:3px;line-height:1.6;}'+
+  '.hdr-badge{background:#C0392B;color:#fff;padding:5px 12px;border-radius:5px;font-size:12px;font-weight:600;white-space:nowrap;}'+
+  '.margin-big{text-align:center;padding:20px;background:#f8f8f8;border-radius:8px;margin-bottom:20px;}'+
+  '.margin-num{font-size:48px;font-weight:800;color:'+mcColor+';}.margin-grade{font-size:14px;font-weight:600;color:'+mcColor+';margin-top:4px;}'+
+  '.margin-lbl{font-size:12px;color:#888;margin-top:3px;}'+
+  '.sec{margin-bottom:20px;}.sec-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px;}'+
+  '.row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f4f4f4;font-size:13px;}.row:last-child{border-bottom:none;}'+
+  '.row.tot{font-weight:700;font-size:14px;border-top:2px solid #eee;margin-top:4px;padding-top:10px;border-bottom:none;}'+
+  '.pos{color:#16a34a;}.neg{color:#dc2626;}'+
+  '.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}'+
+  '.metric{background:#f8f8f8;border-radius:6px;padding:12px;}.metric-val{font-size:18px;font-weight:700;}.metric-lbl{font-size:10px;color:#888;margin-top:2px;}'+
+  '.foot{font-size:10px;color:#aaa;text-align:center;margin-top:24px;border-top:1px solid #eee;padding-top:14px;line-height:1.7;}'+
+  '@media print{body{padding:16px;}}</style></head><body>'+
+  '<div class="hdr"><div><div class="hdr-title">Deal Summary · '+c.activeZip+'</div>'+
+  '<div class="hdr-sub">Jason Kaczmarski · RE/MAX 1st Choice<br>(615) 587-7888 · jasonk@realtracs.com<br>Generated '+dateStr+'</div></div>'+
+  '<div class="hdr-badge">'+c.activeZip+' · '+areaLabel+'</div></div>'+
+  '<div class="margin-big"><div class="margin-num">'+fmtP(c.margin)+'</div><div class="margin-grade">'+marginLabel(c.margin)+'</div><div class="margin-lbl">Estimated profit margin</div></div>'+
+  '<div class="sec"><div class="sec-title">Project inputs</div>'+
+  '<div class="row"><span>Market</span><span>'+c.activeZip+' · '+areaLabel+'</span></div>'+
+  '<div class="row"><span>Zoning</span><span>'+zoneLabel+(c.units>1?' · '+c.units+' units':'')+'</span></div>'+
+  '<div class="row"><span>Lot / teardown cost</span><span>'+fmt(c.lot)+'</span></div>'+
+  '<div class="row"><span>Square footage per unit</span><span>'+c.sqft.toLocaleString()+' sqft</span></div>'+
+  '<div class="row"><span>Build cost per sqft</span><span>$'+c.bpsf+'/sf</span></div>'+
+  '<div class="row"><span>Soft costs per unit</span><span>'+fmt(c.softPerUnit)+'</span></div>'+
+  '<div class="row"><span>Projected sale price per unit</span><span>'+fmt(c.resalePerUnit)+'</span></div>'+
+  '<div class="row"><span>Sale price per sqft</span><span>$'+c.psqftSale+'/sf</span></div>'+
+  '<div class="row"><span>Selling cost</span><span>'+fmtP(c.sellPct*100)+'</span></div>'+
+  '</div>'+
+  '<div class="sec"><div class="sec-title">Financial summary'+(c.units>1?' · '+c.units+' units':'')+' </div>'+
+  '<div class="row"><span>Gross revenue</span><span>'+fmt(c.totalRevenue)+'</span></div>'+
+  '<div class="row"><span>Sales costs</span><span class="neg">−'+fmt(c.totalSellCost)+'</span></div>'+
+  '<div class="row"><span>Total project cost</span><span class="neg">−'+fmt(c.totalCost)+'</span></div>'+
+  '<div class="row tot"><span>Net profit</span><span class="'+(c.totalProfit>=0?'pos':'neg')+'">'+fmt(Math.abs(c.totalProfit))+(c.totalProfit<0?' (loss)':'')+'</span></div>'+
+  '</div>'+
+  '<div class="sec"><div class="sec-title">Key metrics</div><div class="grid2">'+
+  '<div class="metric"><div class="metric-val">'+fmtP(c.roi)+'</div><div class="metric-lbl">Return on cost</div></div>'+
+  '<div class="metric"><div class="metric-val">'+fmt(c.breakEven)+'</div><div class="metric-lbl">Break-even price / unit</div></div>'+
+  '<div class="metric"><div class="metric-val">$'+c.psqftSale+'/sf</div><div class="metric-lbl">Sale price per sqft</div></div>'+
+  '<div class="metric"><div class="metric-val">'+fmtP(c.lotPct)+'</div><div class="metric-lbl">Lot cost as % of exit</div></div>'+
+  '</div></div>'+
+  '<div class="foot">All figures are estimates based on inputs provided — not guaranteed. This report does not constitute financial, legal, tax, or investment advice.<br>Market data: Realtracs MLS · Nashville new construction · Information believed accurate but not guaranteed. © 2026 Realtracs, Inc.<br><br>Jason Kaczmarski · RE/MAX 1st Choice · (615) 587-7888 · jasonk@realtracs.com</div>'+
+  '</body></html>';
+  var w=window.open('','_blank');
+  if(w){w.document.write(html);w.document.close();setTimeout(function(){w.print();},600);}
+}
+
+// ══════ MARKET TRENDS ══════
+function toggleMarket(){
+  mktOpen=!mktOpen;
+  document.getElementById('mkt-body').classList.toggle('open',mktOpen);
+  document.getElementById('mkt-arrow').classList.toggle('open',mktOpen);
+  document.getElementById('mkt-btn').setAttribute('aria-expanded',mktOpen);
+  if(mktOpen&&!chartsBuilt){buildCharts();chartsBuilt=true;}
+  if(mktOpen){updateInsight();updateMktStats();}
+}
+
+function updateInsight(){document.getElementById('mkt-insight').innerHTML=ZIPS[activeZip].insight;}
+
+function buildYrBtns(){
+  var wrap=document.getElementById('yr-row');wrap.innerHTML='';
+  YEARS.forEach(function(y,i){
+    var b=document.createElement('button');b.className='yr-btn'+(i===5?' active':'');b.textContent=y;
+    b.onclick=function(){selYear=i;document.querySelectorAll('.yr-btn').forEach(function(x){x.classList.remove('active');});b.classList.add('active');updateMktStats();};
+    wrap.appendChild(b);
+  });
+}
+
+function updateMktStats(){
+  var d=ZIPS[activeZip],i=selYear;
+  document.getElementById('mkt-stats').innerHTML=
+    '<div class="ms"><div class="ms-val">'+d.sales[i]+'</div><div class="ms-lbl">Closed sales</div></div>'+
+    '<div class="ms"><div class="ms-val">'+fmtK(d.medPrice[i])+'</div><div class="ms-lbl">Median sale price</div></div>'+
+    '<div class="ms"><div class="ms-val">$'+d.medPsqft[i]+'/sf</div><div class="ms-lbl">Median $/sqft</div></div>'+
+    '<div class="ms"><div class="ms-val">'+d.medDOM[i]+' days</div><div class="ms-lbl">Median DOM</div></div>'+
+    '<div class="ms"><div class="ms-val">'+fmtK(d.avgPrice[i])+'</div><div class="ms-lbl">Avg sale price</div></div>'+
+    '<div class="ms"><div class="ms-val" style="font-size:12px">'+d.priceRange[i]+'</div><div class="ms-lbl">Price range</div></div>';
+
+  // Comparison note: all zips vs active
+  var allZ=Object.keys(ZIPS);
+  var activeLabel=ZIPS[activeZip].label||activeZip;
+  var notes=allZ.filter(function(z){return z!==activeZip;}).map(function(z){
+    var zLabel=ZIPS[z].label||z;
+    var gap=ZIPS[activeZip].medPrice[i]-ZIPS[z].medPrice[i];
+    var dir=gap>=0?'above':'below';
+    return activeLabel+' median ('+fmtK(ZIPS[activeZip].medPrice[i])+') ran '+fmtK(Math.abs(gap))+' '+dir+' '+zLabel+' ('+fmtK(ZIPS[z].medPrice[i])+') in '+YEARS[i]+'.';
+  });
+  document.getElementById('comp-note').innerHTML='<strong>'+YEARS[i]+' market comparison.</strong> '+notes.join(' ');
+}
+
+var GC='rgba(0,0,0,.05)',TC='#6b6860';
+function buildCharts(){
+  var allZips=Object.keys(ZIPS);
+
+  // Build legends
+  var legPrice=allZips.map(function(z){
+    var lbl=ZIPS[z]&&ZIPS[z].label?ZIPS[z].label:z;
+    return'<span style="display:flex;align-items:center;gap:4px"><span class="leg-dot" style="background:'+(ZIP_COLORS[z]||'#888')+'"></span>'+lbl+'</span>';
+  }).join('');
+  document.getElementById('chart-legend').innerHTML=legPrice;
+  document.getElementById('chart-legend-psqft').innerHTML=legPrice;
+
+  var base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:GC},ticks:{font:{size:10},color:TC}},y:{grid:{color:GC},ticks:{font:{size:10},color:TC}}}};
+
+  var priceDatasets=allZips.map(function(z){
+    var col=ZIP_COLORS[z]||'#888';
+    return{label:z,data:ZIPS[z].medPrice,borderColor:col,backgroundColor:col.replace(')',',0.06)').replace('rgb','rgba').replace('#','rgba(').replace(/([0-9a-f]{2})/gi,function(m){return parseInt(m,16)+',';}).replace(/,$/,''),borderWidth:z===activeZip?2.5:1.5,pointRadius:z===activeZip?4:3,pointBackgroundColor:col,tension:.3,fill:false,borderDash:z===activeZip?[]:[4,3]};
+  });
+  // Simpler approach:
+  var priceDS=allZips.map(function(z){
+    var col=ZIP_COLORS[z]||'#888';
+    var isActive=z===activeZip;
+    return{label:z,data:ZIPS[z].medPrice,borderColor:col,backgroundColor:'transparent',borderWidth:isActive?2.5:1.5,pointRadius:isActive?4:2,pointBackgroundColor:col,tension:.3,fill:false,borderDash:isActive?[]:[5,4]};
+  });
+  var psqftDS=allZips.map(function(z){
+    var col=ZIP_COLORS[z]||'#888';
+    var isActive=z===activeZip;
+    return{label:z,data:ZIPS[z].medPsqft,borderColor:col,backgroundColor:'transparent',borderWidth:isActive?2.5:1.5,pointRadius:isActive?4:2,pointBackgroundColor:col,tension:.3,fill:false,borderDash:isActive?[]:[5,4]};
+  });
+
+  if(charts.p)charts.p.destroy();
+  charts.p=new Chart(document.getElementById('priceChart'),{type:'line',data:{labels:YEARS,datasets:priceDS},options:{...base,scales:{...base.scales,y:{...base.scales.y,ticks:{...base.scales.y.ticks,callback:function(v){return fmtK(v);}}}}}});
+  if(charts.s)charts.s.destroy();
+  charts.s=new Chart(document.getElementById('psqftChart'),{type:'line',data:{labels:YEARS,datasets:psqftDS},options:{...base,scales:{...base.scales,y:{...base.scales.y,ticks:{...base.scales.y.ticks,callback:function(v){return'$'+v+'/sf';}}}}}});
+}
+
+// ══════ BOOT ══════
+buildZipGroups();
+buildYrBtns();
+updateInsight();
+updateMktStats();
+updateMktContext();
+calc();
+</script>
+</body>
+</html>
