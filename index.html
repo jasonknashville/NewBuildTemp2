@@ -422,7 +422,7 @@ var AREAS=[
   {label:'East Nashville',zips:['37206','37207']},
   {label:'North Nashville',zips:['37208']},
   {label:'South Nashville',zips:['37211']},
-  {label:'West Nashville',zips:['nations'],comingSoon:['sylvan-park','charlotte-park']}
+  {label:'West Nashville',zips:['nations','sylvan-park'],comingSoon:['charlotte-park']}
 ];
 
 // Chart colors assigned per zip (add more as needed)
@@ -431,7 +431,8 @@ var ZIP_COLORS={
   '37207':'#1a6b3c',
   '37208':'#1e3a6b',
   '37211':'#B8860B',
-  'nations':'#6B3FA0'
+  'nations':'#6B3FA0',
+  'sylvan-park':'#1a7a7a'
 };
 
 var YEARS=['2020','2021','2022','2023','2024','2025'];
@@ -492,6 +493,18 @@ var ZIPS={
     medPsqftLatest:360,medPriceLatest:865000,defaultSqft:2400,pctGrowth5yr:56,
     insight:'<strong>The Nations · West Nashville · 2020–2025.</strong> One of Nashville's most dramatic neighborhood transformations. Median prices rose from $556K in 2020 to $865K in 2025 — a 56% increase. Declining sales volume (72 in 2020 down to 16–21 in 2022–2023) reflects the near-exhaustion of teardown inventory rather than softening demand — most of the older 80–100 year old housing stock that could be replaced was replaced 2015–2022. Median $/sqft climbed from $243 to $360 over five years.',
     note2022:'Low 2022 volume (16 sales) reflects scarcity of remaining teardown lots, not market weakness.'
+  },
+  'sylvan-park':{
+    area:'West Nashville',
+    label:'Sylvan Park',
+    medPrice:[1002450,1259500,1737500,1775000,1750000,2170000],
+    avgPrice:[1004033,1144345,1722451,1776154,1829773,2065544],
+    medPsqft:[301,321,462,470,446,535],
+    sales:[16,10,14,13,11,9],medDOM:[4,12,13,23,24,34],
+    priceRange:['$767K–$1.26M','$930K–$1.35M','$1.35M–$2.08M','$1.55M–$2.05M','$1.5M–$2.4M','$1.14M–$3.25M'],
+    medPsqftLatest:535,medPriceLatest:2170000,defaultSqft:4000,pctGrowth5yr:116,
+    insight:'<strong>Sylvan Park · West Nashville · 2020–2025.</strong> Nashville's highest $/sqft new construction market. Median prices climbed from $1.0M in 2020 to $2.17M in 2025 — a 116% increase and the strongest appreciation of any market in this tool. Median $/sqft jumped from $301 to $535 over five years. Volume is low by design — Sylvan Park is a small, nearly built-out neighborhood where new construction means teardowns of premium lots. Build costs consistently run at the top of the range; consult a licensed builder for realistic cost estimates at this price point.',
+    note2022:'The 2022 $/sqft jump ($302→$462) reflects the market re-pricing as buyers competed intensely for the remaining teardown inventory in the neighborhood.'
   }
 };
 
@@ -515,8 +528,8 @@ function buildZipGroups(){
     var pills=document.createElement('div');
     pills.className='zip-pills';
     area.zips.forEach(function(z){
-      var d=ZIPS[z];
-      var displayLabel=d&&d.label?d.label:z;
+      var d=ZIPS[z]||{};
+      var displayLabel=d.label||z;
       var b=document.createElement('button');
       b.className='zip-pill'+(z===activeZip?' active':'');
       b.textContent=displayLabel;
@@ -537,7 +550,7 @@ function buildZipGroups(){
     });
     // Coming soon pills
     if(area.comingSoon){
-      var csLabels={'sylvan-park':'Sylvan Park','charlotte-park':'Charlotte Park'};
+      var csLabels={'charlotte-park':'Charlotte Park'};
       area.comingSoon.forEach(function(cs){
         var b=document.createElement('button');
         b.className='zip-pill zip-pill-coming';
@@ -866,12 +879,25 @@ function buildCharts(){
 }
 
 // ══════ BOOT ══════
-buildZipGroups();
-buildYrBtns();
-updateInsight();
-updateMktStats();
-updateMktContext();
-calc();
+try{
+  buildZipGroups();
+  buildYrBtns();
+  updateInsight();
+  updateMktStats();
+  updateMktContext();
+  calc();
+}catch(e){
+  console.error('Boot error:',e);
+  // Fallback: retry after DOM settles
+  setTimeout(function(){
+    buildZipGroups();
+    buildYrBtns();
+    updateInsight();
+    updateMktStats();
+    updateMktContext();
+    calc();
+  },100);
+}
 </script>
 </body>
 </html>
